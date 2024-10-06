@@ -1,4 +1,5 @@
 package br.edu.utfpr.trabalhofinal.ui.conta.form
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,9 +17,12 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,9 +35,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,9 +54,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.edu.utfpr.trabalhofinal.R
+import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
 import br.edu.utfpr.trabalhofinal.ui.theme.TrabalhoFinalTheme
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.Carregando
 import br.edu.utfpr.trabalhofinal.ui.utils.composables.ErroAoCarregar
+import br.edu.utfpr.trabalhofinal.utils.formatar
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+
 @Composable
 fun FormularioContaScreen(
     modifier: Modifier = Modifier,
@@ -231,16 +245,16 @@ private fun AppBarPreview() {
 private fun FormContent(
     modifier: Modifier = Modifier,
     processando: Boolean,
-    descricao: CampoFormulario,
-    data: CampoFormulario,
-    valor: CampoFormulario,
-    paga: CampoFormulario,
-    tipo: CampoFormulario,
+    descricao: CampoFormulario<String>,
+    data: CampoFormulario<LocalDate>,
+    valor: CampoFormulario<String>,
+    paga: CampoFormulario<Boolean>,
+    tipo: CampoFormulario<TipoContaEnum>,
     onDescricaoAlterada: (String) -> Unit,
-    onDataAlterada: (String) -> Unit,
+    onDataAlterada: (LocalDate) -> Unit,
     onValorAlterado: (String) -> Unit,
-    onStatusPagamentoAlterado: (String) -> Unit,
-    onTipoAlterado: (String) -> Unit
+    onStatusPagamentoAlterado: (Boolean) -> Unit,
+    onTipoAlterado: (TipoContaEnum) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -261,24 +275,8 @@ private fun FormContent(
             FormTextField(
                 modifier = formTextFieldModifier,
                 titulo = stringResource(R.string.descricao),
-                campoFormulario = descricao,
+                valor = descricao.valor,
                 onValorAlterado = onDescricaoAlterada,
-                keyboardCapitalization = KeyboardCapitalization.Words,
-                enabled = !processando
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = stringResource(R.string.data),
-                tint = MaterialTheme.colorScheme.outline
-            )
-            FormTextField(
-                modifier = formTextFieldModifier,
-                titulo = stringResource(R.string.data),
-                campoFormulario = data,
-                onValorAlterado = onDataAlterada,
-                keyboardType = KeyboardType.Number,
                 keyboardCapitalization = KeyboardCapitalization.Words,
                 enabled = !processando
             )
@@ -292,12 +290,27 @@ private fun FormContent(
             FormTextField(
                 modifier = formTextFieldModifier,
                 titulo = stringResource(R.string.valor),
-                campoFormulario = valor,
+                valor = valor.valor,
                 onValorAlterado = onValorAlterado,
                 enabled = !processando
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.CalendarMonth,
+                contentDescription = stringResource(R.string.data),
+                tint = MaterialTheme.colorScheme.background
+            )
+            FormDatePicker(
+                modifier = formTextFieldModifier,
+                titulo = stringResource(R.string.data),
+                valor = data.valor,
+                onValueChanged = onDataAlterada,
+                enabled = !processando,
+                errorMessageCode = data.codigoMensagemErro
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {  // check box
             Icon(
                 imageVector = Icons.Filled.Check,
                 contentDescription = stringResource(R.string.paga),
@@ -306,12 +319,12 @@ private fun FormContent(
             FormTextField(
                 modifier = formTextFieldModifier,
                 titulo = stringResource(R.string.paga),
-                campoFormulario = paga,
-                onValorAlterado = onStatusPagamentoAlterado,
+                valor = "",
+                onValorAlterado = onValorAlterado,
                 enabled = !processando
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) { //radio button
             Icon(
                 imageVector = Icons.Filled.AccountBalance,
                 contentDescription = stringResource(R.string.tipo),
@@ -320,46 +333,110 @@ private fun FormContent(
             FormTextField(
                 modifier = formTextFieldModifier,
                 titulo = stringResource(R.string.tipo),
-                campoFormulario = tipo,
-                onValorAlterado = onTipoAlterado,
+                valor = "",
+                onValorAlterado = onValorAlterado,
                 enabled = !processando
             )
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FormDatePicker(
+    modifier: Modifier,
+    titulo: String,
+    valor:LocalDate,
+    onValueChanged: (LocalDate) -> Unit,
+    enabled: Boolean,
+    errorMessageCode: Int = 0
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = valor
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+    )
+    FormTextField(
+        modifier = modifier,
+        valor = valor.formatar(),
+        onValorAlterado = {},
+        titulo = titulo,
+        readOnly = true,
+        enabled = enabled,
+        errorMessageCode = errorMessageCode,
+        trailingIcon = {
+            IconButton(onClick = { showDatePicker = !showDatePicker }) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Selecione a data",
+                )
+            }
+        }
+    )
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = !showDatePicker },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        val date = Instant
+                            .ofEpochMilli(it)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                        onValueChanged(date)
+                    }
+                    showDatePicker = !showDatePicker
+                }) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
 @Composable
 fun FormTextField(
     modifier: Modifier = Modifier,
     titulo: String,
-    campoFormulario: CampoFormulario,
+    valor: String,
     onValorAlterado: (String) -> Unit,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
+    errorMessageCode: Int = 0,
     keyboardCapitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
     keyboardImeAction: ImeAction = ImeAction.Next,
     keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier,
     ) {
+        val hasError = errorMessageCode > 0
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
-            value = campoFormulario.valor,
+            value = valor,
             onValueChange = onValorAlterado,
             label = { Text(titulo) },
             maxLines = 1,
             enabled = enabled,
-            isError = campoFormulario.contemErro,
+            readOnly = readOnly,
+            isError = hasError,
             keyboardOptions = KeyboardOptions(
                 capitalization = keyboardCapitalization,
                 imeAction = keyboardImeAction,
                 keyboardType = keyboardType
             ),
-            visualTransformation = visualTransformation
+            visualTransformation = visualTransformation,
+            trailingIcon = trailingIcon
         )
-        if (campoFormulario.contemErro) {
+        if (hasError) {
             Text(
-                text = stringResource(campoFormulario.codigoMensagemErro),
+                text = stringResource(errorMessageCode),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.padding(top = 8.dp)
@@ -367,17 +444,18 @@ fun FormTextField(
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 private fun FormContentPreview() {
     TrabalhoFinalTheme {
         FormContent(
             processando = false,
-            descricao = CampoFormulario(),
-            data = CampoFormulario(),
-            valor = CampoFormulario(),
-            paga = CampoFormulario(),
-            tipo = CampoFormulario(),
+            descricao = CampoFormulario(""),
+            data = CampoFormulario(LocalDate.now()),
+            valor = CampoFormulario(""),
+            paga = CampoFormulario(true),
+            tipo = CampoFormulario(TipoContaEnum.DESPESA),
             onDescricaoAlterada = {},
             onDataAlterada = {},
             onValorAlterado = {},

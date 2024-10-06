@@ -39,10 +39,10 @@ class FormularioContaViewModel(
                 carregando = false,
                 conta = conta,
                 descricao = state.descricao.copy(valor = conta.descricao),
-                data = state.data.copy(valor = conta.data.toString()),
+                data = state.data.copy(valor = conta.data),
                 valor = state.valor.copy(valor = conta.valor.toString()),
-                paga = state.paga.copy(valor = conta.paga.toString()),
-                tipo = state.tipo.copy(valor = conta.tipo.name)
+                paga = state.paga.copy(valor = conta.paga),
+                tipo = state.tipo.copy(valor = conta.tipo)
             )
         }
     }
@@ -61,7 +61,7 @@ class FormularioContaViewModel(
     } else {
         0
     }
-    fun onDataAlterada(novaData: String) {
+    fun onDataAlterada(novaData: LocalDate) {
         if (state.data.valor != novaData) {
             state = state.copy(
                 data = state.data.copy(
@@ -79,7 +79,7 @@ class FormularioContaViewModel(
             )
         }
     }
-    fun onStatusPagamentoAlterado(novoStatusPagamento: String) {
+    fun onStatusPagamentoAlterado(novoStatusPagamento: Boolean) {
         if (state.paga.valor != novoStatusPagamento) {
             state = state.copy(
                 paga = state.paga.copy(
@@ -88,7 +88,7 @@ class FormularioContaViewModel(
             )
         }
     }
-    fun onTipoAlterado(novoTipo: String) {
+    fun onTipoAlterado(novoTipo: TipoContaEnum) {
         if (state.tipo.valor != novoTipo) {
             state = state.copy(
                 tipo = state.tipo.copy(
@@ -104,10 +104,10 @@ class FormularioContaViewModel(
             )
             val conta = state.conta.copy(
                 descricao = state.descricao.valor,
-                data = LocalDate.parse(state.data.valor),
+                data = state.data.valor,
                 valor = BigDecimal(state.valor.valor),
-                paga = state.paga.valor == "true",
-                tipo = TipoContaEnum.valueOf(state.tipo.valor)
+                paga = state.paga.valor,
+                tipo = state.tipo.valor
             )
             ContaDatasource.instance.salvar(conta)
             state = state.copy(

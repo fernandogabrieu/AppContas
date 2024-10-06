@@ -1,7 +1,11 @@
 package br.edu.utfpr.trabalhofinal.ui.conta.form
+
 import br.edu.utfpr.trabalhofinal.data.Conta
-data class CampoFormulario(
-    val valor: String = "",
+import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
+import java.time.LocalDate
+
+data class CampoFormulario<C>(
+    val valor: C,
     val codigoMensagemErro: Int = 0
 ) {
     val contemErro get(): Boolean = codigoMensagemErro > 0
@@ -17,11 +21,11 @@ data class FormularioContaState(
     val excluindo: Boolean = false,
     val contaPersistidaOuRemovida: Boolean = false,
     val codigoMensagem: Int = 0,
-    val descricao: CampoFormulario = CampoFormulario(),
-    val data: CampoFormulario = CampoFormulario(),
-    val valor: CampoFormulario = CampoFormulario(),
-    val paga: CampoFormulario = CampoFormulario(),
-    val tipo: CampoFormulario = CampoFormulario()
+    val descricao: CampoFormulario<String> = CampoFormulario(""),
+    val data: CampoFormulario<LocalDate> = CampoFormulario(LocalDate.now()),
+    val valor: CampoFormulario<String> = CampoFormulario(""),
+    val paga: CampoFormulario<Boolean> = CampoFormulario(false),
+    val tipo: CampoFormulario<TipoContaEnum> = CampoFormulario(TipoContaEnum.DESPESA)
 ) {
     val contaNova get(): Boolean = idConta <= 0
     val formularioValido get(): Boolean = descricao.valido &&
