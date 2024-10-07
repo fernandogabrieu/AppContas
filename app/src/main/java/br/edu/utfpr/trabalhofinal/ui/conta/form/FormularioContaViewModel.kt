@@ -61,6 +61,7 @@ class FormularioContaViewModel(
     } else {
         0
     }
+
     fun onDataAlterada(novaData: LocalDate) {
         if (state.data.valor != novaData) {
             state = state.copy(
@@ -74,11 +75,23 @@ class FormularioContaViewModel(
         if (state.valor.valor != novoValor) {
             state = state.copy(
                 valor = state.valor.copy(
-                    valor = novoValor
+                    valor = novoValor,
+                    codigoMensagemErro = validaValorAlterado(novoValor)
                 )
             )
         }
     }
+
+    private fun validaValorAlterado(novoValor: String): Int {
+        if (novoValor.isBlank()) return R.string.valor_obrigatorio
+        return try {
+            BigDecimal(novoValor)
+            0
+        } catch (_: NumberFormatException) {
+            R.string.valor_invalido
+        }
+    }
+
     fun onStatusPagamentoAlterado(novoStatusPagamento: Boolean) {
         if (state.paga.valor != novoStatusPagamento) {
             state = state.copy(
@@ -97,6 +110,7 @@ class FormularioContaViewModel(
             )
         }
     }
+
     fun salvarConta() {
         if (formularioValido()) {
             state = state.copy(
@@ -105,7 +119,11 @@ class FormularioContaViewModel(
             val conta = state.conta.copy(
                 descricao = state.descricao.valor,
                 data = state.data.valor,
-                valor = BigDecimal(state.valor.valor),
+                valor = if (state.valor.valor.isEmpty()) {
+                    BigDecimal.ZERO
+                } else {
+                    BigDecimal(state.valor.valor)
+                },
                 paga = state.paga.valor,
                 tipo = state.tipo.valor
             )
@@ -120,6 +138,9 @@ class FormularioContaViewModel(
         state = state.copy(
             descricao = state.descricao.copy(
                 codigoMensagemErro = validarDescricao(state.descricao.valor)
+            ),
+            valor = state.valor.copy(
+                codigoMensagemErro = validaValorAlterado(state.valor.valor)
             )
         )
         return state.formularioValido

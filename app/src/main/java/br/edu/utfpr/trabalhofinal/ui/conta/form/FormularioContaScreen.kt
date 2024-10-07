@@ -280,7 +280,8 @@ private fun FormContent(
                 valor = descricao.valor,
                 onValorAlterado = onDescricaoAlterada,
                 keyboardCapitalization = KeyboardCapitalization.Words,
-                enabled = !processando
+                enabled = !processando,
+                errorMessageCode = descricao.codigoMensagemErro
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -294,7 +295,9 @@ private fun FormContent(
                 titulo = stringResource(R.string.valor),
                 valor = valor.valor,
                 onValorAlterado = onValorAlterado,
-                enabled = !processando
+                enabled = !processando,
+                keyboardType = KeyboardType.Number,
+                errorMessageCode = valor.codigoMensagemErro
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -344,7 +347,7 @@ private fun FormContent(
                 groupValue = tipo.valor,
                 onValueChanged = onTipoAlterado,
                 enabled = !processando,
-                label = "Despesa"
+                label = stringResource(R.string.despesa)
             )
             FormRadioButton(
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -352,7 +355,7 @@ private fun FormContent(
                 groupValue = tipo.valor,
                 onValueChanged = onTipoAlterado,
                 enabled = !processando,
-                label = "Receita"
+                label = stringResource(R.string.receita)
             )
         }
     }
@@ -430,7 +433,7 @@ fun FormDatePicker(
             IconButton(onClick = { showDatePicker = !showDatePicker }) {
                 Icon(
                     imageVector = Icons.Default.DateRange,
-                    contentDescription = "Selecione a data",
+                    contentDescription = stringResource(R.string.selecione_a_data),
                 )
             }
         }
