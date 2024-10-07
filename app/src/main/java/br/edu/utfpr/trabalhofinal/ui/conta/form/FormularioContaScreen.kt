@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -310,34 +312,92 @@ private fun FormContent(
                 errorMessageCode = data.codigoMensagemErro
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {  // check box
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = stringResource(R.string.paga),
-                tint = MaterialTheme.colorScheme.outline
-            )
-            FormTextField(
-                modifier = formTextFieldModifier,
-                titulo = stringResource(R.string.paga),
-                valor = "",
-                onValorAlterado = onValorAlterado,
-                enabled = !processando
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FormCheckBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                checked = paga.valor,
+                onCheckedChange = onStatusPagamentoAlterado,
+                enabled = !processando,
+                label = stringResource(R.string.paga)
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) { //radio button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
             Icon(
                 imageVector = Icons.Filled.AccountBalance,
                 contentDescription = stringResource(R.string.tipo),
-                tint = MaterialTheme.colorScheme.outline
+                tint = MaterialTheme.colorScheme.background
             )
-            FormTextField(
-                modifier = formTextFieldModifier,
-                titulo = stringResource(R.string.tipo),
-                valor = "",
-                onValorAlterado = onValorAlterado,
-                enabled = !processando
+            FormRadioButton(
+                modifier = Modifier.padding(vertical = 8.dp),
+                value = TipoContaEnum.DESPESA,
+                groupValue = tipo.valor,
+                onValueChanged = onTipoAlterado,
+                enabled = !processando,
+                label = "Despesa"
+            )
+            FormRadioButton(
+                modifier = Modifier.padding(vertical = 8.dp),
+                value = TipoContaEnum.RECEITA,
+                groupValue = tipo.valor,
+                onValueChanged = onTipoAlterado,
+                enabled = !processando,
+                label = "Receita"
             )
         }
+    }
+}
+
+@Composable
+fun FormRadioButton(
+    modifier: Modifier,
+    value: TipoContaEnum,
+    groupValue: TipoContaEnum,
+    onValueChanged: (TipoContaEnum) -> Unit,
+    enabled: Boolean = true,
+    label: String
+) {
+    Row (
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = value == groupValue,
+            onClick = { onValueChanged(value) },
+            enabled = enabled
+        )
+        Text(label)
+    }
+}
+
+@Composable
+fun FormCheckBox(
+    modifier: Modifier,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    label: String
+) {
+    Row (
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+        Text(label)
     }
 }
 
