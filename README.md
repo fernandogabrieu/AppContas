@@ -1,2 +1,2 @@
-# InterfaceRicaTrabalhoFinal
-Trabalho final da disciplina de Interface Rica do curso de pós-graduação de especialização em Desenvolvimento de Aplicativos Móveis
+# AppContas
+Aplicativo de contas e despesas em Kotlin com Compose
